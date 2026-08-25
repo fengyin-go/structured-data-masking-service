@@ -20,8 +20,12 @@ func (c *RetryMaskClient) Call(ctx context.Context) error {
 	c.mu.Lock()
 	c.calls++
 	c.mu.Unlock()
-	<-time.After(c.delay)
-	return nil
+	select {
+	case <-time.After(c.delay):
+		return nil
+	case <-ctx.Done():
+		return ctx.Err()
+	}
 }
 
 func (c *RetryMaskClient) Calls() int {
